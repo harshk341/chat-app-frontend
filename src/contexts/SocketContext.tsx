@@ -1,16 +1,18 @@
-import { useEffect, createContext, useState, type ReactNode } from "react";
+import { createContext, useEffect, useState, type ReactNode } from "react";
 import { io, Socket } from "socket.io-client";
 
 interface SocketContextType {
   socket: Socket | null;
   onlineUsers: string[];
-  emitJoin: (userId: string) => void;
+  initializeSocketAndJoin: (userId: string) => void;
+  emitDisconnect: () => void;
 }
 
 export const SocketContext = createContext<SocketContextType>({
   socket: null,
   onlineUsers: [],
-  emitJoin: (_userId) => {},
+  initializeSocketAndJoin: (_userId) => {},
+  emitDisconnect: () => {},
 });
 
 const SocketProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -18,36 +20,37 @@ const SocketProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
 
   useEffect(() => {
+    return () => {
+      socket?.disconnect();
+    };
+  }, [socket]);
+
+  const initializeSocketAndJoin = (userId: string) => {
     const newSocket = io("http://localhost:5000");
-
-    function createConnection() {
-      setSocket(newSocket);
-    }
-
-    function handleOnlineUsers(users: string[]) {
-      setOnlineUsers(users);
-    }
 
     newSocket.on("connect", () => {
       console.log("connected to socket server");
+
+      newSocket.emit("join", userId);
     });
 
-    newSocket.on("online-users", handleOnlineUsers);
+    newSocket.on("online-users", function (users: string[]) {
+      setOnlineUsers(users);
+    });
 
-    createConnection();
+    setSocket(newSocket);
+  };
 
-    return function () {
-      newSocket.disconnect();
-      newSocket.off("online-users", handleOnlineUsers);
-    };
-  }, []);
-
-  const emitJoin = (userId: string) => {
-    socket?.emit("join", userId);
+  const emitDisconnect = () => {
+    socket?.disconnect();
+    setSocket(null);
+    setOnlineUsers([]);
   };
 
   return (
-    <SocketContext.Provider value={{ socket, onlineUsers, emitJoin }}>
+    <SocketContext.Provider
+      value={{ socket, onlineUsers, initializeSocketAndJoin, emitDisconnect }}
+    >
       {children}
     </SocketContext.Provider>
   );

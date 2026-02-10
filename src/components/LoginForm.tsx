@@ -1,6 +1,7 @@
 import { useState } from "react";
 import useSocket from "../hooks/useSocket";
 import useAuth from "../hooks/useAuth";
+import axios, { AxiosError } from "axios";
 
 interface LoginFormData {
   email: string;
@@ -22,7 +23,7 @@ const LoginForm = () => {
   const [formData, setFormData] = useState<LoginFormData>(initialFormData);
   const [error, setError] = useState<LoginFormError>({});
   const [isLoading, setIsLoading] = useState(false);
-  const { emitJoin } = useSocket();
+  const { initializeSocketAndJoin } = useSocket();
 
   const validate = (): boolean => {
     const newErrors: LoginFormError = {};
@@ -58,23 +59,21 @@ const LoginForm = () => {
 
       setIsLoading(true);
 
-      const res = await fetch("http://localhost:5000/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
-      const data = await res.json();
+      const { data } = await axios.post(
+        "http://localhost:5000/api/auth/login",
+        formData,
+      );
 
       login(data.user);
-      emitJoin(data.user._id);
+      initializeSocketAndJoin(data.user._id);
 
       setFormData(initialFormData);
       alert(JSON.stringify(data));
     } catch (error: unknown) {
-      if (error instanceof Error) {
-        alert(error.message);
+      if (axios.isAxiosError(error) && error.response) {
+        alert(JSON.stringify(error.response.data));
+      } else {
+        console.log(error);
       }
     } finally {
       setIsLoading(false);

@@ -7,13 +7,11 @@ import Dashboard from "./components/Dashboard";
 const App: React.FC = () => {
   const { isLoggedIn } = useAuth();
 
-  if (!isLoggedIn) {
-    return <LoginForm />;
-  }
-
   return (
     <>
-      <Dashboard />
+      <div className="chat-app">
+        {isLoggedIn ? <Dashboard /> : <LoginForm />}
+      </div>
     </>
   );
 };
