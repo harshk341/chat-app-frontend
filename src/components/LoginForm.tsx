@@ -1,7 +1,7 @@
 import { useState } from "react";
 import useSocket from "../hooks/useSocket";
 import useAuth from "../hooks/useAuth";
-import axios, { AxiosError } from "axios";
+import axios from "axios";
 
 interface LoginFormData {
   email: string;
@@ -63,6 +63,7 @@ const LoginForm = () => {
         "http://localhost:5000/api/auth/login",
         formData,
       );
+      axios.defaults.headers.common["Authorization"] = `Bearer ${data.token}`;
 
       login(data.user);
       initializeSocketAndJoin(data.user._id);
