@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import useAuth from "../hooks/useAuth";
 import useSocket from "../hooks/useSocket";
 import axios from "axios";
@@ -10,6 +10,8 @@ const Dashboard = () => {
   const [messages, setMessages] = useState<any[]>([]);
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
   const [users, setUsers] = useState<any[]>([]);
+  const [typingUser, setTypingUser] = useState<Set<string>>(new Set([]));
+  const typingUserTimeput = useRef<{ [key: string]: NodeJS.Timeout }>({});
 
   const usersList = useMemo(() => {
     const newOnlineUser = onlineUsers.filter((v) => v !== user?._id);
@@ -18,6 +20,20 @@ const Dashboard = () => {
       isOnline: newOnlineUser.includes(user._id),
     }));
   }, [onlineUsers, user, users]);
+
+  const fetchUsersList = useCallback(async () => {
+    try {
+      const { data } = await axios.get(`http://localhost:5000/api/users`);
+
+      setUsers(data.data);
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error) && error.response) {
+        alert(JSON.stringify(error.response.data));
+      } else {
+        console.log(error);
+      }
+    }
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -29,14 +45,23 @@ const Dashboard = () => {
     setInputValue(value);
   };
 
+  const handleKeyDown = () => {
+    if (!socket || !user || !selectedUser) return;
+
+    socket.emit("typing", {
+      sender: user._id,
+      receiver: selectedUser,
+    });
+  };
+
   const handleSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     const value = inputValue.trim();
-    if (!value || !selectedUser || !user) return;
+    if (!value || !selectedUser || !user || !socket) return;
 
     setInputValue("");
 
-    socket?.emit("send-message", {
+    socket.emit("send-message", {
       sender: user._id,
       receiver: selectedUser,
       content: value,
@@ -44,20 +69,47 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
-    if (!socket) return;
+    if (!socket || !user || !selectedUser) return;
+
+    const currentTimeoutRef = typingUserTimeput.current;
 
     const handleReceiveMessage = (msg: any) => {
+      const isCurrentChat =
+        (msg.sender === user._id && msg.receiver === selectedUser) ||
+        (msg.sender === selectedUser && msg.receiver === user._id);
+      if (!isCurrentChat) return;
       setMessages((prev: any[]) => {
         return [...prev, msg];
       });
     };
 
+    const handleTypingStatus = (sender: string) => {
+      setTypingUser((prev) => new Set(prev).add(sender));
+
+      if (currentTimeoutRef[sender]) {
+        clearTimeout(currentTimeoutRef[sender]);
+      }
+
+      currentTimeoutRef[sender] = setTimeout(() => {
+        setTypingUser((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(sender);
+          return newSet;
+        });
+        delete currentTimeoutRef[sender];
+      }, 2000);
+    };
+
     socket.on("receiver-message", handleReceiveMessage);
+    socket.on("user-typing", handleTypingStatus);
+    socket.on("new-user", fetchUsersList);
 
     return function () {
       socket.removeListener("receiver-message", handleReceiveMessage);
+      socket.removeListener("user-typing", handleTypingStatus);
+      Object.values(currentTimeoutRef).forEach(clearTimeout);
     };
-  }, [socket]);
+  }, [socket, selectedUser, user, fetchUsersList]);
 
   useEffect(() => {
     if (!selectedUser) return;
@@ -68,9 +120,7 @@ const Dashboard = () => {
           `http://localhost:5000/api/messages/${selectedUser}`,
         );
 
-        setMessages((prev: any[]) => {
-          return [...prev, ...data.data];
-        });
+        setMessages(data.data);
       } catch (error: unknown) {
         if (axios.isAxiosError(error) && error.response) {
           alert(JSON.stringify(error.response.data));
@@ -84,22 +134,12 @@ const Dashboard = () => {
   }, [selectedUser]);
 
   useEffect(() => {
-    const fetchUsersList = async () => {
-      try {
-        const { data } = await axios.get(`http://localhost:5000/api/users`);
-
-        setUsers(data.data);
-      } catch (error: unknown) {
-        if (axios.isAxiosError(error) && error.response) {
-          alert(JSON.stringify(error.response.data));
-        } else {
-          console.log(error);
-        }
-      }
+    const loadUsers = async () => {
+      await fetchUsersList();
     };
 
-    fetchUsersList();
-  }, []);
+    loadUsers();
+  }, [fetchUsersList]);
 
   return (
     <>
@@ -118,6 +158,9 @@ const Dashboard = () => {
                 >
                   {user.name}
                   <span className="online-status"></span>
+                  {typingUser.has(user._id) && (
+                    <span className="typing-indicator">typing...</span>
+                  )}
                 </button>
               </li>
             ))}
@@ -141,6 +184,7 @@ const Dashboard = () => {
               type="text"
               autoComplete="off"
               onChange={handleChange}
+              onKeyDown={handleKeyDown}
               value={inputValue}
             />
             <button type="submit">Send</button>
