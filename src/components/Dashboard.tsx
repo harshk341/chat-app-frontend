@@ -107,6 +107,7 @@ const Dashboard = () => {
     return function () {
       socket.removeListener("receiver-message", handleReceiveMessage);
       socket.removeListener("user-typing", handleTypingStatus);
+      socket.removeListener("new-user", fetchUsersList);
       Object.values(currentTimeoutRef).forEach(clearTimeout);
     };
   }, [socket, selectedUser, user, fetchUsersList]);
