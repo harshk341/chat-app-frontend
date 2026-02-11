@@ -9,10 +9,15 @@ const Dashboard = () => {
   const [inputValue, setInputValue] = useState<string>("");
   const [messages, setMessages] = useState<any[]>([]);
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
+  const [users, setUsers] = useState<any[]>([]);
 
   const usersList = useMemo(() => {
-    return onlineUsers.filter((v) => v !== user?._id);
-  }, [onlineUsers, user]);
+    const newOnlineUser = onlineUsers.filter((v) => v !== user?._id);
+    return users.map((user) => ({
+      ...user,
+      isOnline: newOnlineUser.includes(user._id),
+    }));
+  }, [onlineUsers, user, users]);
 
   const handleLogout = () => {
     logout();
@@ -78,19 +83,41 @@ const Dashboard = () => {
     fetchMessageList();
   }, [selectedUser]);
 
+  useEffect(() => {
+    const fetchUsersList = async () => {
+      try {
+        const { data } = await axios.get(`http://localhost:5000/api/users`);
+
+        setUsers(data.data);
+      } catch (error: unknown) {
+        if (axios.isAxiosError(error) && error.response) {
+          alert(JSON.stringify(error.response.data));
+        } else {
+          console.log(error);
+        }
+      }
+    };
+
+    fetchUsersList();
+  }, []);
+
   return (
     <>
       <div className="chat-app clearfix">
         <div className="left-content">
           <ul className="users-list">
-            {usersList.map((userId) => (
+            {usersList.map((user) => (
               <li
-                key={userId}
-                title={userId}
-                className={`users-list-item ${selectedUser === userId ? "selected-user" : ""}`}
+                key={user._id}
+                className={`users-list-item ${selectedUser === user._id ? "selected-user" : ""}`}
               >
-                <button type="button" onClick={() => setSelectedUser(userId)}>
-                  {userId}
+                <button
+                  type="button"
+                  onClick={() => setSelectedUser(user._id)}
+                  className={user.isOnline ? "online" : ""}
+                >
+                  {user.name}
+                  <span className="online-status"></span>
                 </button>
               </li>
             ))}

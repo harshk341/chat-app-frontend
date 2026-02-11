@@ -91,7 +91,22 @@
   overflow: hidden;
   white-space: nowrap;
   cursor: pointer;
+  text-align: start;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
+.users-list li button span.online-status {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  background-color: gray;
+  border-radius: 50%;
+}
+.users-list li button.online span.online-status {
+  background-color: green;
+}
+
 .left-content .users-list li button:hover {
   background-color: #333;
   color: #fff;
