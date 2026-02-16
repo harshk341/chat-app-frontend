@@ -60,7 +60,7 @@ const LoginForm = () => {
       setIsLoading(true);
 
       const { data } = await axios.post(
-        "http://localhost:5000/api/auth/login",
+        `${import.meta.env.VITE_BACKEND_API}/auth/login`,
         formData,
       );
       axios.defaults.headers.common["Authorization"] = `Bearer ${data.token}`;

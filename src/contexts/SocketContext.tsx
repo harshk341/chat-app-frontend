@@ -26,7 +26,7 @@ const SocketProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   }, [socket]);
 
   const initializeSocketAndJoin = (userId: string) => {
-    const newSocket = io("http://localhost:5000");
+    const newSocket = io(import.meta.env.VITE_SOCKET_API);
 
     newSocket.on("connect", () => {
       console.log("connected to socket server");

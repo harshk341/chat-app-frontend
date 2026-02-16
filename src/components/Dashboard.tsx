@@ -8,6 +8,8 @@ const Dashboard = () => {
   const { onlineUsers, emitDisconnect, socket } = useSocket();
   const [inputValue, setInputValue] = useState<string>("");
   const [messages, setMessages] = useState<any[]>([]);
+  const [loadingMsg, setLoadingMsg] = useState(false);
+  const [loadingUser, setLoadingUser] = useState(false);
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
   const [users, setUsers] = useState<any[]>([]);
   const [typingUser, setTypingUser] = useState<Set<string>>(new Set([]));
@@ -22,8 +24,11 @@ const Dashboard = () => {
   }, [onlineUsers, user, users]);
 
   const fetchUsersList = useCallback(async () => {
+    setLoadingUser(true);
     try {
-      const { data } = await axios.get(`http://localhost:5000/api/users`);
+      const { data } = await axios.get(
+        `${import.meta.env.VITE_BACKEND_API}/users`,
+      );
 
       setUsers(data.data);
     } catch (error: unknown) {
@@ -32,6 +37,8 @@ const Dashboard = () => {
       } else {
         console.log(error);
       }
+    } finally {
+      setLoadingUser(false);
     }
   }, []);
 
@@ -116,9 +123,10 @@ const Dashboard = () => {
     if (!selectedUser) return;
 
     const fetchMessageList = async () => {
+      setLoadingMsg(true);
       try {
         const { data } = await axios.get(
-          `http://localhost:5000/api/messages/${selectedUser}`,
+          `${import.meta.env.VITE_BACKEND_API}/messages/${selectedUser}`,
         );
 
         setMessages(data.data);
@@ -128,6 +136,8 @@ const Dashboard = () => {
         } else {
           console.log(error);
         }
+      } finally {
+        setLoadingMsg(false);
       }
     };
 
@@ -147,24 +157,28 @@ const Dashboard = () => {
       <div className="chat-app clearfix">
         <div className="left-content">
           <ul className="users-list">
-            {usersList.map((user) => (
-              <li
-                key={user._id}
-                className={`users-list-item ${selectedUser === user._id ? "selected-user" : ""}`}
-              >
-                <button
-                  type="button"
-                  onClick={() => setSelectedUser(user._id)}
-                  className={user.isOnline ? "online" : ""}
+            {loadingUser ? (
+              <span className="loader"></span>
+            ) : (
+              usersList.map((user) => (
+                <li
+                  key={user._id}
+                  className={`users-list-item ${selectedUser === user._id ? "selected-user" : ""}`}
                 >
-                  {user.name}
-                  <span className="online-status"></span>
-                  {typingUser.has(user._id) && (
-                    <span className="typing-indicator">typing...</span>
-                  )}
-                </button>
-              </li>
-            ))}
+                  <button
+                    type="button"
+                    onClick={() => setSelectedUser(user._id)}
+                    className={user.isOnline ? "online" : ""}
+                  >
+                    {user.name}
+                    <span className="online-status"></span>
+                    {typingUser.has(user._id) && (
+                      <span className="typing-indicator">typing...</span>
+                    )}
+                  </button>
+                </li>
+              ))
+            )}
           </ul>
           <div className="logout-control">
             <button type="button" onClick={handleLogout}>
@@ -174,11 +188,15 @@ const Dashboard = () => {
         </div>
         <div className="right-content">
           <ul className="messages">
-            {messages.map((msg) => (
-              <li>
-                {`${msg.sender === user?._id ? "You" : "Friend"} :- ${msg.content}`}
-              </li>
-            ))}
+            {loadingMsg ? (
+              <span className="loader"></span>
+            ) : (
+              messages.map((msg) => (
+                <li>
+                  {`${msg.sender === user?._id ? "You" : "Friend"} :- ${msg.content}`}
+                </li>
+              ))
+            )}
           </ul>
           <form onSubmit={handleSubmit}>
             <input
