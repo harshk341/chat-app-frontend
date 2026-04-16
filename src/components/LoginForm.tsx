@@ -83,41 +83,49 @@ const LoginForm = () => {
 
   return (
     <>
-      <form onSubmit={handleSubmit}>
-        <fieldset>
-          <label htmlFor="email">Email:</label>
-          <br />
+      <form
+        onSubmit={handleSubmit}
+        className="flex flex-col items-center gap-5 max-w-fit mx-auto shadow p-6 border-slate-300 rounded"
+      >
+        <h2 className="text-3xl">Login</h2>
+        <fieldset className="flex flex-col gap-2 w-full">
+          <label htmlFor="email">Email</label>
           <input
             type="email"
             name="email"
             id="email"
             value={formData.email}
             onChange={handleInputChange}
+            className="px-3 py-2 border bg-slate-100 rounded border-slate-300"
           />
-          <br />
-          {error.email && <span style={{ color: "red" }}>{error.email}</span>}
+          {error.email && <span className="text-red-600">{error.email}</span>}
         </fieldset>
-        <fieldset>
-          <label htmlFor="password">Password:</label>
-          <br />
+        <fieldset className="flex flex-col gap-2 w-full">
+          <label htmlFor="password">Password</label>
           <input
             type="password"
             name="password"
             id="password"
             value={formData.password}
             onChange={handleInputChange}
+            className="px-3 py-2 border bg-slate-100 rounded border-slate-300"
           />
-          <br />
           {error.password && (
-            <span style={{ color: "red" }}>{error.password}</span>
+            <span className="text-red-600">{error.password}</span>
           )}
         </fieldset>
-        <fieldset>
-          {isLoading ? (
-            <button disabled>Loading...</button>
-          ) : (
-            <button type="submit">Login</button>
-          )}
+        <fieldset className="flex flex-col w-full">
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="bg-slate-600 text-white px-4 py-2 rounded cursor-pointer disabled:bg-slate-400 hover:bg-slate-500"
+          >
+            {isLoading ? (
+              <span className="animate-spin w-6 h-6 border-3 border-slate-100 border-t-slate-700 rounded-full inline-block"></span>
+            ) : (
+              "Login"
+            )}
+          </button>
         </fieldset>
       </form>
     </>
