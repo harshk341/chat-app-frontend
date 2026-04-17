@@ -82,7 +82,7 @@ const LoginForm = () => {
   };
 
   return (
-    <>
+    <div className="container mx-auto px-4 self-center">
       <form
         onSubmit={handleSubmit}
         className="flex flex-col items-center gap-5 max-w-fit mx-auto shadow p-6 border-slate-300 rounded"
@@ -128,7 +128,7 @@ const LoginForm = () => {
           </button>
         </fieldset>
       </form>
-    </>
+    </div>
   );
 };
 

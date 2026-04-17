@@ -153,64 +153,73 @@ const Dashboard = () => {
   }, [fetchUsersList]);
 
   return (
-    <>
-      <div className="chat-app clearfix">
-        <div className="left-content">
-          <ul className="users-list">
-            {loadingUser ? (
-              <span className="loader"></span>
-            ) : (
-              usersList.map((user) => (
-                <li
-                  key={user._id}
-                  className={`users-list-item ${selectedUser === user._id ? "selected-user" : ""}`}
+    <div className="flex justify-center items-center w-full flex-1">
+      <div className="h-full basis-1/4 border-r-2 border-r-slate-300 flex flex-col min-h-0">
+        <ul className="flex flex-col flex-1 gap-2 mt-3 px-3 overflow-y-auto">
+          {loadingUser ? (
+            <span className="animate-spin w-10 h-10 border-4 border-slate-100 border-t-slate-700 rounded-full inline-block"></span>
+          ) : (
+            usersList.map((user) => (
+              <li key={user._id}>
+                <button
+                  type="button"
+                  onClick={() => setSelectedUser(user._id)}
+                  className={`rounded-md p-4 flex w-full cursor-pointer justify-between items-center ${selectedUser === user._id ? "bg-slate-600 text-white" : "bg-slate-200"}`}
                 >
-                  <button
-                    type="button"
-                    onClick={() => setSelectedUser(user._id)}
-                    className={user.isOnline ? "online" : ""}
-                  >
-                    {user.name}
-                    <span className="online-status"></span>
-                    {typingUser.has(user._id) && (
-                      <span className="typing-indicator">typing...</span>
-                    )}
-                  </button>
-                </li>
-              ))
-            )}
-          </ul>
-          <div className="logout-control">
-            <button type="button" onClick={handleLogout}>
-              Logout
-            </button>
-          </div>
-        </div>
-        <div className="right-content">
-          <ul className="messages">
-            {loadingMsg ? (
-              <span className="loader"></span>
-            ) : (
-              messages.map((msg) => (
-                <li>
-                  {`${msg.sender === user?._id ? "You" : "Friend"} :- ${msg.content}`}
-                </li>
-              ))
-            )}
-          </ul>
-          <form onSubmit={handleSubmit}>
-            <input
-              type="text"
-              autoComplete="off"
-              onChange={handleChange}
-              onKeyDown={handleKeyDown}
-              value={inputValue}
-            />
-            <button type="submit">Send</button>
-          </form>
+                  {user.name}
+                  <span
+                    className={`inline-block w-3 h-3 rounded-full ${user.isOnline ? "bg-green-400" : "bg-slate-400"}`}
+                  ></span>
+                  {typingUser.has(user._id) && <span>typing...</span>}
+                </button>
+              </li>
+            ))
+          )}
+        </ul>
+        <div className="py-3 px-2">
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="bg-slate-600 p-4 rounded-md text-white w-full cursor-pointer"
+          >
+            Logout
+          </button>
         </div>
       </div>
-    </>
+      <div className="flex flex-col h-full basis-3/4">
+        <ul className="flex-1 p-4 overflow-y-auto space-y-2">
+          {loadingMsg ? (
+            <span className="animate-spin w-10 h-10 border-4 border-slate-100 border-t-slate-700 rounded-full inline-block"></span>
+          ) : (
+            messages.map((msg) => (
+              <li>
+                {`${msg.sender === user?._id ? "You" : "Friend"} :- ${msg.content}`}
+              </li>
+            ))
+          )}
+        </ul>
+        <form
+          onSubmit={handleSubmit}
+          className="flex items-center w-full px-2 py-3 gap-2"
+        >
+          <input
+            type="text"
+            autoComplete="off"
+            onChange={handleChange}
+            onKeyDown={handleKeyDown}
+            value={inputValue}
+            placeholder="Type a message"
+            className="flex-1 px-3 py-4 bg-slate-200 rounded border-slate-300"
+          />
+          <button
+            type="submit"
+            className="bg-slate-600 text-white p-4 rounded cursor-pointer"
+          >
+            Send
+          </button>
+        </form>
+      </div>
+    </div>
   );
 };
 

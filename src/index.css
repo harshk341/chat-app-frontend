@@ -52,12 +52,9 @@
   width: 1600px;
   max-width: 100%;
   margin: 0 auto;
-  min-height: 100svh;
-  height: 100%;
+  height: 100svh;
   display: flex;
-  align-items: center;
-  box-sizing: border-box;
-  padding: 1rem;
+  overflow: hidden;
 }
 
 body {
