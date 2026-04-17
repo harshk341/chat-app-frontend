@@ -12,6 +12,7 @@ const Dashboard = () => {
   const [loadingUser, setLoadingUser] = useState(false);
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
   const [users, setUsers] = useState<any[]>([]);
+  const [isOpen, setIsOpen] = useState(false);
   const [typingUser, setTypingUser] = useState<Set<string>>(new Set([]));
   const typingUserTimeput = useRef<{ [key: string]: NodeJS.Timeout }>({});
 
@@ -154,7 +155,7 @@ const Dashboard = () => {
 
   return (
     <div className="flex justify-center items-center w-full flex-1">
-      <div className="h-full basis-1/4 border-r-2 border-r-slate-300 flex flex-col min-h-0">
+      <div className="hidden h-full md:basis-1/4 border-r-2 border-r-slate-300 md:flex flex-col">
         <ul className="flex flex-col flex-1 gap-2 mt-3 px-3 overflow-y-auto">
           {loadingUser ? (
             <span className="animate-spin w-10 h-10 border-4 border-slate-100 border-t-slate-700 rounded-full inline-block"></span>
@@ -186,7 +187,63 @@ const Dashboard = () => {
           </button>
         </div>
       </div>
-      <div className="flex flex-col h-full basis-3/4">
+      {isOpen && (
+        <div className="fixed inset-0 z-50 flex">
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => {
+              setIsOpen(false);
+            }}
+          />
+          <div className="relative w-full max-w-2xs bg-white h-full shadow flex flex-col">
+            <ul className="flex flex-col flex-1 gap-2 mt-3 px-3 overflow-y-auto">
+              {loadingUser ? (
+                <span className="animate-spin w-10 h-10 border-4 border-slate-100 border-t-slate-700 rounded-full inline-block"></span>
+              ) : (
+                usersList.map((user) => (
+                  <li key={user._id}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedUser(user._id);
+                        setIsOpen(false);
+                      }}
+                      className={`rounded-md p-4 flex w-full cursor-pointer justify-between items-center ${selectedUser === user._id ? "bg-slate-600 text-white" : "bg-slate-200"}`}
+                    >
+                      {user.name}
+                      <span
+                        className={`inline-block w-3 h-3 rounded-full ${user.isOnline ? "bg-green-400" : "bg-slate-400"}`}
+                      ></span>
+                    </button>
+                  </li>
+                ))
+              )}
+            </ul>
+            <div className="py-3 px-2">
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="bg-slate-600 p-4 rounded-md text-white w-full cursor-pointer"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      <div className="flex flex-col h-full basis-full md:basis-3/4">
+        <div className="shadow p-4 md:hidden">
+          <button
+            className="flex flex-col gap-1 p-2 rounded-md cursor-pointer hover:bg-slate-100 w-10 h-10 justify-center"
+            type="button"
+            onClick={() => {
+              setIsOpen(true);
+            }}
+          >
+            <span className="inline-block w-full h-1 rounded-lg bg-(--text)"></span>
+            <span className="inline-block w-2/3 h-1 rounded-lg bg-(--text)"></span>
+          </button>
+        </div>
         <ul className="flex-1 p-4 overflow-y-auto space-y-2">
           {loadingMsg ? (
             <span className="animate-spin w-10 h-10 border-4 border-slate-100 border-t-slate-700 rounded-full inline-block"></span>

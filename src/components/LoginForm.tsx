@@ -118,7 +118,7 @@ const LoginForm = () => {
           <button
             type="submit"
             disabled={isLoading}
-            className="bg-slate-600 text-white px-4 py-2 rounded cursor-pointer disabled:bg-slate-400 hover:bg-slate-500"
+            className="bg-slate-600 text-white px-4 py-2 rounded cursor-pointer disabled:cursor-auto disabled:bg-slate-400 hover:bg-slate-500"
           >
             {isLoading ? (
               <span className="animate-spin w-6 h-6 border-3 border-slate-100 border-t-slate-700 rounded-full inline-block"></span>
